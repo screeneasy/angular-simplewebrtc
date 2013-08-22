@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://simplewebrtc.com/latest.js"></script> 
+        <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
+        <script src="javascripts/socket.io.js"></script>
+        <style>
+           .iterim {
+              color: #999;
+           }
+           .final {
+              color: #222;
+           }
+           #localVideo {
+              float:left;
+           }
+           .clear {
+              clear:both;
+           }
+           video {
+              width: 400px;
+              height: 400px;
+           }
+           .dialouge-box {
+              border: 1px solid #333;
+              width: 600px;
+              position: absolute;
+              height: 300px;
+              left: 425px;
+              font-size:25px;
+              overflow: auto;
+           }
+           #dialouge-box-self {
+              top: 58px;
+           }
+           #dialouge-box-remote {
+              top: 462px;
+           }
+
+        </style>
+    </head>
+    <body>
+        <div id="localVideo"></div>
+        <div id="remotesVideos" class="clear"></div>
+        <div id="dialouge-box-self" class="dialouge-box"></div>
+        <div id="dialouge-box-remote" class="dialouge-box"></div>
+        <script>
+         var webrtc = new SimpleWebRTC({
+             // the id/element dom element that will hold "our" video
+             localVideoEl: 'localVideo',
+             // the id/element dom element that will hold remote videos
+             remoteVideosEl: 'remotesVideos',
+             // immediately ask for camera access
+             autoRequestMedia: true
+         });
+         // we have to wait until it's ready
+         webrtc.on('readyToCall', function () {
+             // you can name it anything
+             webrtc.joinRoom('your awesome room name');
+         });
+
+         var socket = io.connect('http://67.170.33.207');
+         $divRemote = $('<div></div>');
+         $divRemote.appendTo('#dialouge-box-remote');
+         socket.on('receive-voice-to-text', function(data) {
+            var isInterim = data.interim_transcript !== "";
+            $divRemote.html(isInterim ? data.interim_transcript : data.final_transcript)
+                                                   .removeClass('interim')
+                                                   .removeClass('final')
+                                                   .addClass(isInterim ? 'iterim' : 'final');
+
+            if (!isInterim) {
+               $divRemote = $('<div></div>');
+               $divRemote.appendTo('#dialouge-box-remote');
+                $("#dialouge-box-self").animate({ scrollTop: 999999 }, 1000);
+            }
+ 
+         });
+
+         var recognition = new webkitSpeechRecognition();
+         recognition.continuous = true;
+         recognition.interimResults = true;
+
+         recognition.onstart = function() { console.log('start'); }
+         $divSelf = $('<div></div>');
+         $divSelf.appendTo('#dialouge-box-self');
+         recognition.onresult = function(event) { 
+            var interim_transcript = "";
+            var final_transcript = ""
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                final_transcript += event.results[i][0].transcript;
+              } else {
+                interim_transcript += event.results[i][0].transcript;
+              }
+            }
+
+            var isInterim = interim_transcript !== "";
+            $divSelf.html(isInterim ? interim_transcript : final_transcript)
+                                                   .removeClass('interim')
+                                                   .removeClass('final')
+                                                   .addClass(isInterim ? 'iterim' : 'final');
+
+            if (!isInterim) {
+               $divSelf = $('<div></div>');
+               $divSelf.appendTo('#dialouge-box-self');
+                $("#dialouge-box-self").animate({ scrollTop: 999 }, 1000);
+            }
+            socket.emit('send-voice-to-text', {interim_transcript: interim_transcript, final_transcript: final_transcript});
+         }  
+         recognition.onerror = function(event) { console.log('err'); }
+         recognition.onend = function() { console.log('end');  }
+         recognition.lang = "en";
+         recognition.start();
+        </script>
+    </body>
+</html>
