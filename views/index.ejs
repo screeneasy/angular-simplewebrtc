@@ -59,7 +59,7 @@
              webrtc.joinRoom('your awesome room name');
          });
 
-         var socket = io.connect('http://67.170.33.207');
+         var socket = io.connect('http://localhost');
          $divRemote = $('<div></div>');
          $divRemote.appendTo('#dialouge-box-remote');
          socket.on('receive-voice-to-text', function(data) {
