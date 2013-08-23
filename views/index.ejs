@@ -4,6 +4,7 @@
         <script src="http://simplewebrtc.com/latest.js"></script> 
         <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script> 
         <script src="javascripts/socket.io.js"></script>
+        <script src="javascripts/recognizer.js"></script>
         <style>
            .iterim {
               color: #999;
@@ -60,58 +61,54 @@
          });
 
          var socket = io.connect('http://localhost');
-         $divRemote = $('<div></div>');
-         $divRemote.appendTo('#dialouge-box-remote');
-         socket.on('receive-voice-to-text', function(data) {
-            var isInterim = data.interim_transcript !== "";
-            $divRemote.html(isInterim ? data.interim_transcript : data.final_transcript)
-                                                   .removeClass('interim')
-                                                   .removeClass('final')
-                                                   .addClass(isInterim ? 'iterim' : 'final');
 
-            if (!isInterim) {
-               $divRemote = $('<div></div>');
-               $divRemote.appendTo('#dialouge-box-remote');
-                $("#dialouge-box-self").animate({ scrollTop: 999999 }, 1000);
-            }
- 
-         });
-
-         var recognition = new webkitSpeechRecognition();
-         recognition.continuous = true;
-         recognition.interimResults = true;
-
-         recognition.onstart = function() { console.log('start'); }
          $divSelf = $('<div></div>');
          $divSelf.appendTo('#dialouge-box-self');
-         recognition.onresult = function(event) { 
-            var interim_transcript = "";
-            var final_transcript = ""
-            for (var i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                final_transcript += event.results[i][0].transcript;
-              } else {
-                interim_transcript += event.results[i][0].transcript;
-              }
-            }
+         $divRemote = $('<div></div>');
+         $divRemote.appendTo('#dialouge-box-remote');
+         socket.on('receive-interim', function(data) {
+            var isInterim = data.interim_transcript !== "";
+            $divRemote.html(data.message)
+                      .removeClass('interim')
+                      .removeClass('final')
+                      .addClass('iterim');
 
-            var isInterim = interim_transcript !== "";
-            $divSelf.html(isInterim ? interim_transcript : final_transcript)
-                                                   .removeClass('interim')
-                                                   .removeClass('final')
-                                                   .addClass(isInterim ? 'iterim' : 'final');
+         });
+         socket.on('receive-final', function(data){
 
-            if (!isInterim) {
-               $divSelf = $('<div></div>');
-               $divSelf.appendTo('#dialouge-box-self');
-                $("#dialouge-box-self").animate({ scrollTop: 999 }, 1000);
-            }
-            socket.emit('send-voice-to-text', {interim_transcript: interim_transcript, final_transcript: final_transcript});
-         }  
-         recognition.onerror = function(event) { console.log('err'); }
-         recognition.onend = function() { console.log('end');  }
-         recognition.lang = "en";
-         recognition.start();
+            $divRemote = $('<div></div>');
+            $divRemote.appendTo('#dialouge-box-remote');
+            $divRemote.html(data.message)
+                      .removeClass('interim')
+                      .removeClass('final')
+                      .addClass('final');
+
+
+            $("#dialouge-box-self").animate({ scrollTop: 999999 }, 1000);
+         });
+
+         var r = recognizer(true,true,"en")
+         r.onInterim(function(data) {
+            $divSelf.html(data.message)
+                      .removeClass('interim')
+                      .removeClass('final')
+                      .addClass('interim');
+
+            socket.emit('send-interim', {message: data.message});
+         });
+
+         r.onFinal(function(data) {
+            $divSelf = $('<div></div>');
+            $divSelf.appendTo('#dialouge-box-self');
+            $divSelf.html(data.message)
+                      .removeClass('interim')
+                      .removeClass('final')
+                      .addClass('interim');
+
+            $("#dialouge-box-self").animate({ scrollTop: 999 }, 1000);
+            socket.emit('send-final', {message: data.message});
+         });
+         r.start();
         </script>
     </body>
 </html>

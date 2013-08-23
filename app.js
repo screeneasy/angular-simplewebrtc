@@ -37,8 +37,10 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 var io = require('socket.io').listen(server);
 
 io.sockets.on('connection', function (socket) {
-   socket.on('send-voice-to-text', function(data) {
-      console.log(data);
-      socket.broadcast.emit('receive-voice-to-text', data);
+   socket.on('send-final', function(data) {
+      socket.broadcast.emit('receive-final', data);
+   });
+   socket.on('send-interim', function(data) {
+      socket.broadcast.emit('receive-interim', data);
    });
 });
