@@ -7,15 +7,14 @@ var recognizer = function(continuous, interimResults,lang) {
    recognition.onend = function() { console.log('end');  }
    recognition.onstart = function() { console.log('start'); }
 
-   var onInterim = [];
-   var onFinal = [];
+   var interimEvents = [];
+   var finalEvents = [];
    function trigger(funcs, data) {
       funcs.forEach(function(func,k) {
-         func.apply(this,data); 
+         func.apply(this,[data]); 
       })
    }
    recognition.onresult = function(event) {
-      console.log(event);
       var final_transcript = "";
       var interim_transcript = "";
       for (var i = event.resultIndex; i < event.results.length; ++i) {
@@ -27,18 +26,18 @@ var recognizer = function(continuous, interimResults,lang) {
       }
       var isInterim = interim_transcript !== "";
       if (isInterim) {
-         trigger(onInterim, {message:iterim_transcript});
+         trigger(interimEvents, {message:interim_transcript});
       }
       else {
-         trigger(onFinal, {message:final_transcript});
+         trigger(finalEvents, {message:final_transcript});
       }
    }
    return {
       onInterim: function(func) {
-         onInterim.push(func);
+         interimEvents.push(func);
       },
       onFinal: function(func) {
-         onFinal.push(func);
+         finalEvents.push(func);
       },
       start: function() {
          recognition.start();

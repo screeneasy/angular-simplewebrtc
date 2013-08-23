@@ -6,7 +6,7 @@
         <script src="javascripts/socket.io.js"></script>
         <script src="javascripts/recognizer.js"></script>
         <style>
-           .iterim {
+           .interim {
               color: #999;
            }
            .final {
@@ -73,18 +73,16 @@
                       .removeClass('final')
                       .addClass('iterim');
 
+            $("#dialouge-box-self").animate({ scrollTop: 999999 }, 500);
          });
          socket.on('receive-final', function(data){
-
-            $divRemote = $('<div></div>');
-            $divRemote.appendTo('#dialouge-box-remote');
             $divRemote.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
                       .addClass('final');
 
-
-            $("#dialouge-box-self").animate({ scrollTop: 999999 }, 1000);
+            $divRemote = $('<div></div>');
+            $divRemote.appendTo('#dialouge-box-remote');
          });
 
          var r = recognizer(true,true,"en")
@@ -98,13 +96,14 @@
          });
 
          r.onFinal(function(data) {
-            $divSelf = $('<div></div>');
-            $divSelf.appendTo('#dialouge-box-self');
+            console.log(data);
             $divSelf.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
-                      .addClass('interim');
+                      .addClass('final');
 
+            $divSelf = $('<div></div>');
+            $divSelf.appendTo('#dialouge-box-self');
             $("#dialouge-box-self").animate({ scrollTop: 999 }, 1000);
             socket.emit('send-final', {message: data.message});
          });
