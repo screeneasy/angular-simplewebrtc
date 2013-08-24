@@ -67,7 +67,7 @@
          $divRemote = $('<div></div>');
          $divRemote.appendTo('#dialouge-box-remote');
          socket.on('receive-interim', function(data) {
-            var isInterim = data.interim_transcript !== "";
+            console.log('hi');
             $divRemote.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
@@ -76,6 +76,7 @@
             $("#dialouge-box-self").animate({ scrollTop: 999999 }, 500);
          });
          socket.on('receive-final', function(data){
+            console.log('hello');
             $divRemote.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
@@ -83,6 +84,7 @@
 
             $divRemote = $('<div></div>');
             $divRemote.appendTo('#dialouge-box-remote');
+            $("#dialouge-box-self").animate({ scrollTop: 999999 }, 500);
          });
 
          var r = recognizer(true,true,"en")
@@ -96,7 +98,6 @@
          });
 
          r.onFinal(function(data) {
-            console.log(data);
             $divSelf.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
