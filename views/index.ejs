@@ -60,14 +60,13 @@
              webrtc.joinRoom('your awesome room name');
          });
 
-         var socket = io.connect('http://localhost');
+         var socket = io.connect(window.location.origin);
 
          $divSelf = $('<div></div>');
          $divSelf.appendTo('#dialouge-box-self');
          $divRemote = $('<div></div>');
          $divRemote.appendTo('#dialouge-box-remote');
          socket.on('receive-interim', function(data) {
-            console.log('hi');
             $divRemote.html(data.message)
                       .removeClass('interim')
                       .removeClass('final')
