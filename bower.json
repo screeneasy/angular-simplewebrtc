@@ -1,0 +1,8 @@
+{
+  "name": "angular-simplewebrtc",
+  "version": "0.0.1",
+  "dependencies": {
+    "angular": "1.0.8",
+    "SimpleWebRTC": "git@github.com:HenrikJoreteg/SimpleWebRTC.git"
+  }
+}
